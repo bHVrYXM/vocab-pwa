@@ -82,7 +82,8 @@ export function ImportScreen({ deckId }: { deckId?: number }) {
           <input
             type="file"
             hidden
-            accept=".apkg,.colpkg,.json,.csv,.tsv,.txt,application/json,text/csv,text/plain"
+            // No `accept` filter: iOS doesn't know the .apkg type and would grey those files out.
+            // The format is detected from the file's contents instead.
             onChange={(e) => {
               const file = e.currentTarget.files?.[0];
               e.currentTarget.value = '';

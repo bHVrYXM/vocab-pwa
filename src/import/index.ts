@@ -15,13 +15,21 @@ async function loadSql() {
   return initSqlJs({ locateFile: () => wasmUrl });
 }
 
+const TEXT_EXTENSIONS = new Set(['json', 'csv', 'tsv', 'txt']);
+
+/** Detects the format from the file's contents, since iOS may not keep a useful extension or type. */
 export async function parseFile(file: File): Promise<ParsedImport> {
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  if (ext === 'apkg' || ext === 'colpkg' || ext === 'zip') {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const isZip = bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04; // "PK\x03\x04"
+  if (isZip) {
     const [{ parseApkg }, SQL] = await Promise.all([import('./apkg/parse'), loadSql()]);
-    return parseApkg(new Uint8Array(await file.arrayBuffer()), SQL);
+    return parseApkg(bytes, SQL);
   }
-  return parseText(await file.text(), ext);
+  if (bytes.subarray(0, 4096).includes(0)) {
+    throw new ImportError(`"${file.name}" isn't a supported file. Use an .apkg deck package, JSON, or CSV.`);
+  }
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  return parseText(new TextDecoder().decode(bytes), ext && TEXT_EXTENSIONS.has(ext) ? ext : undefined);
 }
 
 /** Parses pasted or file text; JSON is detected by content when no extension is known. */

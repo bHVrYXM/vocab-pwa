@@ -6,6 +6,17 @@ import './styles.css';
 
 registerSW({ immediate: true });
 
+// A new deploy's service worker takes over immediately; reload once so the page runs the
+// new code too. Skipped on the very first install, when there was no previous worker.
+if (navigator.serviceWorker?.controller) {
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloaded) return;
+    reloaded = true;
+    location.reload();
+  });
+}
+
 // The service worker asks an already-open window to show a tapped notification's word.
 navigator.serviceWorker?.addEventListener('message', (e) => {
   if (e.data?.type === 'navigate' && typeof e.data.path === 'string') location.hash = e.data.path.replace(/^#/, '');
