@@ -1,0 +1,40 @@
+{
+  "name": "vocab-pwa",
+  "version": "1.0.0",
+  "description": "Language flashcards PWA",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.sw.json && tsc -p tsconfig.node.json",
+    "icons": "node scripts/make-icons.mjs",
+    "send-daily-word": "node scripts/send-daily-word.mjs",
+    "test": "vitest run"
+  },
+  "type": "module",
+  "dependencies": {
+    "dexie": "^4.4.6",
+    "fflate": "^0.8.3",
+    "fzstd": "^0.1.1",
+    "preact": "^11.0.0",
+    "sql.js": "^1.14.2",
+    "ts-fsrs": "^5.4.2"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "@types/node": "^26.6.4",
+    "@types/sql.js": "^1.4.11",
+    "fake-indexeddb": "^6.2.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.3",
+    "web-push": "^3.6.7",
+    "workbox-build": "^7.4.1",
+    "workbox-core": "^7.4.1",
+    "workbox-precaching": "^7.4.1",
+    "workbox-routing": "^7.4.1",
+    "workbox-window": "^7.4.1"
+  },
+  "private": true
+}

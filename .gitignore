@@ -1,0 +1,6 @@
+node_modules/
+dist/
+dev-dist/
+.secrets/
+.DS_Store
+*.local

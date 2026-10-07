@@ -1,0 +1,55 @@
+name: Daily word
+
+on:
+  # Hourly; the script decides which run sends, based on daily-word.config.json.
+  # This keeps daylight saving time automatic and absorbs GitHub's scheduling delays.
+  schedule:
+    - cron: '45 * * * *'
+  workflow_dispatch:
+    inputs:
+      send_now:
+        description: Send immediately (ignore the configured time)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  actions: write # to keep this scheduled workflow from being disabled after 60 days without commits
+
+concurrency:
+  group: daily-word
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+
+      - id: check
+        if: ${{ !inputs.send_now }}
+        run: node scripts/send-daily-word.mjs --check
+
+      - if: ${{ inputs.send_now || steps.check.outputs.target != '' }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - if: ${{ inputs.send_now || steps.check.outputs.target != '' }}
+        run: npm ci --ignore-scripts
+
+      - name: Send push
+        if: ${{ inputs.send_now || steps.check.outputs.target != '' }}
+        run: node scripts/send-daily-word.mjs ${{ inputs.send_now && '--now' || '' }}
+        env:
+          TARGET: ${{ steps.check.outputs.target }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          PUSH_SUBSCRIPTION: ${{ secrets.PUSH_SUBSCRIPTION }}
+
+      - name: Keep the schedule active
+        if: ${{ steps.check.outputs.target != '' && !inputs.send_now }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/daily-word.yml/enable"
+        env:
+          GH_TOKEN: ${{ github.token }}
